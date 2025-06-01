@@ -122,7 +122,7 @@ with st.sidebar:
     st.markdown("### 🧠 Selecione o Modelo")
     st.session_state.modelo = st.selectbox("Modelo", modelos_disponiveis, index=modelos_disponiveis.index(st.session_state.modelo))
     st.markdown("---")
-    st.markdown("Desenvolvido com ❤️ por ChatGPT")
+    st.markdown("Desenvolvido com ❤️ por Gabriel Organista")
 
 # Função para renderizar chat
 def render_chat():
