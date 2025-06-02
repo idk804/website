@@ -1,11 +1,11 @@
 import streamlit as st
 import time
-import g4f  # pip install g4f
+import g4f  # by xtekky
 
-# Configuração da página
-st.set_page_config(page_title="ChatBot Multimodelo", page_icon="🤖", layout="wide")
+# Configura a página
+st.set_page_config(page_title="🤖 ChatBot Multimodelo", page_icon="🤖", layout="wide")
 
-# CSS visual moderno
+# CSS moderno com efeito glassmorphism
 st.markdown("""
     <style>
     body {
@@ -66,33 +66,6 @@ st.markdown("""
     .avatar.bot {
         background: #ffffff33;
     }
-    .input-container {
-        max-width: 800px;
-        margin: 20px auto;
-        display: flex;
-        gap: 10px;
-    }
-    .input-container input {
-        flex: 1;
-        padding: 12px;
-        border-radius: 25px;
-        border: none;
-        outline: none;
-        background: rgba(255, 255, 255, 0.1);
-        color: #ffffff;
-    }
-    .input-container button {
-        padding: 12px 20px;
-        border: none;
-        border-radius: 25px;
-        background: #1e88e5;
-        color: #ffffff;
-        cursor: pointer;
-        transition: background 0.3s ease;
-    }
-    .input-container button:hover {
-        background: #1565c0;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -101,8 +74,8 @@ st.markdown("<h1>🤖 ChatBot Multimodelo</h1>", unsafe_allow_html=True)
 
 # Lista de modelos
 modelos_disponiveis = [
-    "gpt-4",
     "gpt-4o",
+    "gpt-4",
     "o3",
     "o4-mini",
     "claude-3.7-sonnet",
@@ -110,21 +83,21 @@ modelos_disponiveis = [
     "grok-3"
 ]
 
-# Inicialização de estado
+# Estado inicial
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 if "modelo" not in st.session_state:
     st.session_state.modelo = "gpt-4o"
 
-# Selecionar modelo
+# Sidebar
 with st.sidebar:
     st.markdown("### 🧠 Selecione o Modelo")
     st.session_state.modelo = st.selectbox("Modelo", modelos_disponiveis, index=modelos_disponiveis.index(st.session_state.modelo))
     st.markdown("---")
-    st.markdown("Desenvolvido com ❤️ por Gabriel Organista")
+    st.markdown("💡 Desenvolvido com Streamlit + g4f")
 
-# Função para renderizar chat
+# Função para renderizar as mensagens
 def render_chat():
     chat_html = '<div class="chat-container">'
     for msg in st.session_state.messages:
@@ -134,17 +107,16 @@ def render_chat():
     chat_html += '</div>'
     st.markdown(chat_html, unsafe_allow_html=True)
 
+# Mostra o histórico do chat
 render_chat()
 
-# Input
-with st.container():
-    col1, col2 = st.columns([8, 1])
-    with col1:
-        user_input = st.text_input("Digite sua mensagem...", key="user_input", placeholder="Pergunte qualquer coisa...", label_visibility="collapsed")
-    with col2:
-        send = st.button("Enviar")
+# Input do usuário
+user_input = st.text_input("Digite sua mensagem...", key="user_input", placeholder="Pergunte qualquer coisa...")
 
-# Processamento
+# Botão de enviar
+send = st.button("Enviar")
+
+# Quando o usuário envia uma mensagem
 if user_input and send:
     st.session_state.messages.append({"role": "user", "content": user_input})
     render_chat()
@@ -157,8 +129,12 @@ if user_input and send:
             messages=[{"role": "user", "content": user_input}]
         )
     except Exception as e:
-        resposta = f"⚠️ Erro com o modelo {st.session_state.modelo}."
+        resposta = f"⚠️ Erro com o modelo **{st.session_state.modelo}**:\n\n```\n{str(e)}\n```"
 
     st.session_state.messages.append({"role": "bot", "content": resposta})
-    st.session_state.user_input = ""
+
+    # Limpa o input de texto com segurança
+    st.session_state["user_input"] = ""
+
+    # Atualiza a interface
     st.rerun()
