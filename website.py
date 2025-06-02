@@ -1,10 +1,11 @@
 import streamlit as st
 import time
-import g4f  # xtekky
+import g4f  # Biblioteca g4f do xtekky
 
-# 🎨 Estilo moderno com glassmorphism
+# Configuração da página
 st.set_page_config(page_title="🤖 ChatBot Multimodelo", page_icon="🤖", layout="wide")
 
+# Estilo com efeito moderno
 st.markdown("""
 <style>
 body {
@@ -52,9 +53,10 @@ h1 {
 </style>
 """, unsafe_allow_html=True)
 
+# Título
 st.markdown("<h1>🤖 ChatBot Multimodelo</h1>", unsafe_allow_html=True)
 
-# Modelos disponíveis
+# Lista de modelos suportados
 modelos_disponiveis = [
     "gpt-4o",
     "gpt-4",
@@ -72,10 +74,10 @@ if "messages" not in st.session_state:
 if "modelo" not in st.session_state:
     st.session_state.modelo = "gpt-4o"
 
-# Detecta reset de input
-if "reset" in st.experimental_get_query_params():
+# ✅ Reset de campo de input com método moderno
+if "reset" in st.query_params:
     st.session_state["user_input"] = ""
-    st.experimental_set_query_params()  # limpa a URL
+    st.query_params.clear()
 
 # Sidebar
 with st.sidebar:
@@ -85,9 +87,9 @@ with st.sidebar:
     st.markdown("---")
     if st.button("🧹 Limpar Conversa"):
         st.session_state.messages = []
-        st.experimental_rerun()
+        st.rerun()
 
-# Função para renderizar o chat
+# Função para exibir o chat
 def render_chat():
     chat_html = '<div class="chat-container">'
     for msg in st.session_state.messages:
@@ -96,21 +98,22 @@ def render_chat():
     chat_html += '</div>'
     st.markdown(chat_html, unsafe_allow_html=True)
 
-# Renderizar histórico
+# Exibir histórico do chat
 render_chat()
 
-# Input do usuário
+# Campo de entrada
 user_input = st.text_input("Digite sua pergunta:", key="user_input", placeholder="Fale com o chatbot...")
 
-# Botão enviar
+# Botão para enviar
 send = st.button("Enviar")
 
-# Processamento
 if user_input and send:
+    # Armazena mensagem do usuário
     st.session_state.messages.append({"role": "user", "content": user_input})
     render_chat()
     time.sleep(0.4)
 
+    # Gera resposta com g4f
     try:
         resposta = g4f.ChatCompletion.create(
             model=st.session_state.modelo,
@@ -120,8 +123,9 @@ if user_input and send:
     except Exception as e:
         resposta = f"❌ Erro: {str(e)}"
 
+    # Armazena resposta do bot
     st.session_state.messages.append({"role": "bot", "content": resposta})
 
-    # Redefine o campo de input via query param (trick seguro)
-    st.experimental_set_query_params(reset="1")
+    # Força a limpeza do input (sem erro de SessionState)
+    st.query_params["reset"] = "1"
     st.rerun()
