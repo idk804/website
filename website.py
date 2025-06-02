@@ -1,78 +1,60 @@
 import streamlit as st
 import time
-import g4f  # by xtekky
+import g4f  # xtekky
 
-# Configura a página
+# 🎨 Estilo moderno com glassmorphism
 st.set_page_config(page_title="🤖 ChatBot Multimodelo", page_icon="🤖", layout="wide")
 
-# CSS moderno com efeito glassmorphism
 st.markdown("""
-    <style>
-    body {
-        background: linear-gradient(135deg, #1F1C2C, #928DAB);
-        font-family: 'Segoe UI', sans-serif;
-        color: #ffffff;
-    }
-    h1 {
-        text-align: center;
-        margin-top: 30px;
-        font-weight: 600;
-    }
-    .chat-container {
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 20px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-        backdrop-filter: blur(12px);
-        padding: 20px;
-        max-width: 800px;
-        margin: 30px auto;
-        overflow-y: auto;
-        height: 70vh;
-    }
-    .message {
-        display: flex;
-        align-items: flex-start;
-        padding: 10px;
-        margin-bottom: 10px;
-        border-radius: 15px;
-        max-width: 70%;
-        animation: fadeInUp 0.3s ease-out;
-    }
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .message.user {
-        background: linear-gradient(145deg, #1e88e5, #42a5f5);
-        margin-left: auto;
-        text-align: right;
-        color: white;
-    }
-    .message.bot {
-        background: rgba(255, 255, 255, 0.2);
-        margin-right: auto;
-        text-align: left;
-    }
-    .avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        margin-right: 10px;
-        flex-shrink: 0;
-    }
-    .avatar.user {
-        background: #1e88e5;
-    }
-    .avatar.bot {
-        background: #ffffff33;
-    }
-    </style>
+<style>
+body {
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+}
+h1 {
+    text-align: center;
+    color: #ffffff;
+    margin-top: 30px;
+}
+.chat-container {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+    height: 70vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.message {
+    padding: 10px 15px;
+    margin: 10px 0;
+    border-radius: 12px;
+    max-width: 75%;
+    animation: fadeIn 0.3s ease-out;
+}
+.message.user {
+    background: #2196f3;
+    margin-left: auto;
+    color: white;
+}
+.message.bot {
+    background: rgba(255, 255, 255, 0.15);
+    margin-right: auto;
+    color: white;
+}
+@keyframes fadeIn {
+    from {opacity: 0; transform: translateY(10px);}
+    to {opacity: 1; transform: translateY(0);}
+}
+</style>
 """, unsafe_allow_html=True)
 
-# Cabeçalho
 st.markdown("<h1>🤖 ChatBot Multimodelo</h1>", unsafe_allow_html=True)
 
-# Lista de modelos
+# Modelos disponíveis
 modelos_disponiveis = [
     "gpt-4o",
     "gpt-4",
@@ -90,37 +72,44 @@ if "messages" not in st.session_state:
 if "modelo" not in st.session_state:
     st.session_state.modelo = "gpt-4o"
 
+# Detecta reset de input
+if "reset" in st.experimental_get_query_params():
+    st.session_state["user_input"] = ""
+    st.experimental_set_query_params()  # limpa a URL
+
 # Sidebar
 with st.sidebar:
-    st.markdown("### 🧠 Selecione o Modelo")
+    st.markdown("### 🔍 Escolha o Modelo")
     st.session_state.modelo = st.selectbox("Modelo", modelos_disponiveis, index=modelos_disponiveis.index(st.session_state.modelo))
+    st.markdown("ℹ️ Usando `LegacyLMArena` do g4f")
     st.markdown("---")
-    st.markdown("💡 Desenvolvido com Streamlit + g4f")
+    if st.button("🧹 Limpar Conversa"):
+        st.session_state.messages = []
+        st.experimental_rerun()
 
-# Função para renderizar as mensagens
+# Função para renderizar o chat
 def render_chat():
     chat_html = '<div class="chat-container">'
     for msg in st.session_state.messages:
-        role = msg["role"]
-        avatar = f'<div class="avatar {role}"></div>'
-        chat_html += f'<div class="message {role}">{avatar}<div>{msg["content"]}</div></div>'
+        role_class = "user" if msg["role"] == "user" else "bot"
+        chat_html += f'<div class="message {role_class}">{msg["content"]}</div>'
     chat_html += '</div>'
     st.markdown(chat_html, unsafe_allow_html=True)
 
-# Mostra o histórico do chat
+# Renderizar histórico
 render_chat()
 
 # Input do usuário
-user_input = st.text_input("Digite sua mensagem...", key="user_input", placeholder="Pergunte qualquer coisa...")
+user_input = st.text_input("Digite sua pergunta:", key="user_input", placeholder="Fale com o chatbot...")
 
-# Botão de enviar
+# Botão enviar
 send = st.button("Enviar")
 
-# Quando o usuário envia uma mensagem
+# Processamento
 if user_input and send:
     st.session_state.messages.append({"role": "user", "content": user_input})
     render_chat()
-    time.sleep(0.5)
+    time.sleep(0.4)
 
     try:
         resposta = g4f.ChatCompletion.create(
@@ -129,12 +118,10 @@ if user_input and send:
             messages=[{"role": "user", "content": user_input}]
         )
     except Exception as e:
-        resposta = f"⚠️ Erro com o modelo **{st.session_state.modelo}**:\n\n```\n{str(e)}\n```"
+        resposta = f"❌ Erro: {str(e)}"
 
     st.session_state.messages.append({"role": "bot", "content": resposta})
 
-    # Limpa o input de texto com segurança
-    st.session_state["user_input"] = ""
-
-    # Atualiza a interface
+    # Redefine o campo de input via query param (trick seguro)
+    st.experimental_set_query_params(reset="1")
     st.rerun()
