@@ -1,2 +1,2 @@
-streamlit
-g4f[all]
+gradio
+g4f
